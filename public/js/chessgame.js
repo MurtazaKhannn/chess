@@ -135,8 +135,8 @@ socket.on("move", function(move) {
     renderBoard();
 });
 
-socket.on("checkmate", function(winnerColor) {
-    const winner = winnerColor === "w" ? "Black" : "White";
+socket.on("checkmate", function(turnColor) {
+    const winner = turnColor === "w" ? "Black" : "White";
     messageElement.innerText = `${winner} wins by checkmate!`;
     restartButton.classList.remove("hidden"); // Show restart button
 });

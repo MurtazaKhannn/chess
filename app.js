@@ -70,9 +70,9 @@ io.on("connection", function (uniquesocket) {
                 // Check for checkmate after the move
                 if (chess.isCheckmate()) {
                     // Notify clients that checkmate occurred
-                    io.emit("checkmate", chess.turn()); // Send the color of the winning player
+                    io.emit("checkmate", chess.turn()); // jeetne wale ka color bhej
                     chess.reset(); // Reset the game state
-                    currentPlayer = "w"; // Set White to start the new game
+                    currentPlayer = "w"; // white ko current player bana
                 } else {
                     io.emit("move", move); // Broadcast the move to all connected clients
                     io.emit("boardState", chess.fen()); // Send the current board state (FEN)

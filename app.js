@@ -70,7 +70,7 @@ io.on("connection", function (uniquesocket) {
                 // Check for checkmate after the move
                 if (chess.isCheckmate()) {
                     // Notify clients that checkmate occurred
-                    io.emit("checkmate", chess.turn()); // jeetne wale ka color bhej
+                    io.emit("checkmate", !chess.turn()); // jeetne wale ka color bhej
                     chess.reset(); // Reset the game state
                     currentPlayer = "w"; // white ko current player bana
                 } else {

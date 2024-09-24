@@ -1,12 +1,12 @@
 const socket = io();  
 const chess = new Chess();
 const boardElement = document.querySelector(".chessboard");
-const messageElement = document.querySelector(".message"); // Ensure this is in your HTML
+const messageElement = document.querySelector(".message"); 
 
 let draggedPiece = null;
 let sourceSquare = null;
 let playerRole = null;
-let opponentDisconnected = false; // Track if opponent is disconnected
+let opponentDisconnected = false; 
 
 const restartButton = document.getElementById("restartButton");
 

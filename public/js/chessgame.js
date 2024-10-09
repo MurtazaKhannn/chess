@@ -1,3 +1,11 @@
+const url = new URL(window.location.href);
+const params = new URLSearchParams(url.search);
+
+if (!params.has('code')) {
+    window.location.href = "/";
+}
+
+const code = params.get("code");
 const socket = io();
 const chess = new Chess();
 
@@ -74,10 +82,10 @@ const renderBoard = () => {
     if (playerRole === "b") {
         boardElement.classList.add("flipped");
         currentTurn.innerHTML = "Opponent turn";
-    } else if (playerRole == "w"){
+    } else if (playerRole == "w") {
         boardElement.classList.remove("flipped");
         currentTurn.innerHTML = "Your turn";
-    }else{
+    } else {
         currentTurn.innerHTML = "You are Spectator";
     }
 
@@ -105,7 +113,7 @@ const handleMove = (source, target) => {
         promotion: "q",
     };
 
-    socket.emit("move", move);
+    socket.emit("move", code, move);
 };
 
 // Unicode representation of pieces
@@ -129,63 +137,79 @@ const getPieceUnicode = (piece) => {
 };
 
 // Socket event listeners
-socket.on("playerRole", function (role) {
-    playerRole = role;
-    if(role == "w"){
-        startTimer();
-    }
-    renderBoard();
-});
-
-socket.on("spectatorRole", function () {
-    playerRole = null;
-    document.getElementById("timer").style.display = "none";
-    renderBoard();
-});
-
-socket.on("boardState", function (fen) {
-    chess.load(fen);
-    renderBoard();
-});
-
-socket.on("move", function (move) {
-    chess.move(move);
-    renderBoard();
-});
-
-socket.on("turn", function (player) {
-    console.log(player)
-    if(playerRole == null){
-        currentTurn.innerHTML = "You are Spectator";
-        return;
-    }
-    if (player === playerRole) {
-        startTimer();
-        currentTurn.innerHTML = "Your turn";
-    } else {
-        stopTimer();
-        currentTurn.innerHTML = "Opponent turn";
+socket.on("playerRole", function (thisCode, role) {
+    if (thisCode == code) {
+        playerRole = role;
+        if (role == "w") {
+            startTimer();
+        }
+        renderBoard();
     }
 });
 
-socket.on("checkmate", function (turnColor) {
-    const winner = turnColor === "w" ? "Black" : "White";
-    messageElement.innerText = `${winner} wins by checkmate!`;
-    restartButton.classList.remove("hidden"); // Show restart button
-    resetTimer();
+socket.on("spectatorRole", function (thisCode) {
+    if (thisCode == code) {
+        playerRole = null;
+        document.getElementById("timer").style.display = "none";
+        renderBoard();
+    }
+});
+
+socket.on("boardState", function (thisCode, fen) {
+    if (thisCode == code) {
+        chess.load(fen);
+        renderBoard();
+    }
+});
+
+socket.on("move", function (thisCode, move) {
+    if (thisCode == code) {
+        chess.move(move);
+        renderBoard();
+    }
+});
+
+socket.on("turn", function (thisCode, player) {
+    if (thisCode == code) {
+        if (playerRole == null) {
+            currentTurn.innerHTML = "You are Spectator";
+            return;
+        }
+        if (player === playerRole) {
+            startTimer();
+            currentTurn.innerHTML = "Your turn";
+        } else {
+            stopTimer();
+            currentTurn.innerHTML = "Opponent turn";
+        }
+    }
+});
+
+socket.on("checkmate", function (thisCode, turnColor) {
+    if (thisCode == code) {
+        const winner = turnColor === "w" ? "Black" : "White";
+        messageElement.innerText = `${winner} wins by checkmate!`;
+        restartButton.classList.remove("hidden"); // Show restart button
+        resetTimer();
+    }
 });
 
 // Handle disconnection
-socket.on("opponent_disconnect", function () {
-    opponentDisconnected = true;
-    renderBoard();
-    resetTimer();
+socket.on("opponent_disconnect", function (thisCode, player) {
+    if (thisCode == code) {
+        console.log(player + " has disconnected")
+        opponentDisconnected = true;
+        renderBoard();
+        resetTimer();
+    }
 });
 
-socket.on("reconnect", function () {
-    opponentDisconnected = false;
-    // Optionally, you can fetch the current game state here
-    renderBoard();
+socket.on("reconnect", function (thisCode) {
+    if (thisCode == code) {
+        opponentDisconnected = false;
+        // Optionally, you can fetch the current game state here
+        renderBoard();
+    }
 });
 
 // Restart the game logic
@@ -199,3 +223,4 @@ restartButton.addEventListener("click", () => {
 
 // Initial render
 renderBoard();
+socket.emit("joinCode", code);

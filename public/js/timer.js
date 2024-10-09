@@ -32,7 +32,9 @@ function updateTimer() {
     var minutes = Math.floor(elapsedTime / 1000 / 60) % 60; // calculate minutes
     var hours = Math.floor(elapsedTime / 1000 / 60 / 60); // calculate hours
     var displayTime = pad(hours) + ":" + pad(minutes) + ":" + pad(seconds); // format display time
-    document.getElementById("timer").innerHTML = displayTime; // update the display
+    if(displayTime){
+        document.getElementById("timer").innerHTML = displayTime;
+    }
 }
 
 function pad(number) {

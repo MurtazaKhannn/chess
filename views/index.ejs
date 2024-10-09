@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chess</title>
+  <title><%= title %></title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .chessboard {
@@ -65,8 +65,9 @@
 
 <body>
   <div class="w-full h-screen flex items-center justify-center bg-zinc-900 flex-col">
-    <div class="w-full justify-start p-5">
+    <div class="w-full flex justify-between p-5">
       <div class="text-white text-2xl p-2 border rounded-md border-white w-fit" id="timer">00:00:00</div>
+      <div class="text-white text-xl p-2 flex gap-3">Code :- <p class="text-gray text-2xl font-semibold"><%= joinCode %></p></div>
     </div>
     <h1 class="text-white text-4xl mb-4">Chess</h1>
     <div class="chessboard w-96 h-96"></div>

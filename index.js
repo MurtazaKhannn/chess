@@ -12,11 +12,12 @@ const chess = new Chess();
 let players = {};
 let currentPlayer = "w"; // White starts the game
 
+app.set('views', path.join(__dirname, 'views'));
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-    res.render("index", { title: "Chess" });
+    res.render("index.ejs", { title: "Chess" });
 });
 
 io.on("connection", function (uniquesocket) {

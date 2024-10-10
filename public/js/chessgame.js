@@ -49,12 +49,16 @@ const renderBoard = () => {
                         draggedPiece = pieceElement;
                         sourceSquare = { row: rowindex, col: squareindex };
                         e.dataTransfer.setData("text/plain", "");
+                        const sqaureCode = String.fromCharCode(97 + squareindex) + String(8 - rowindex);
+                        giveSuggestions(chess.moves({ square: sqaureCode, verbose: true }));
                     }
                 });
 
                 pieceElement.addEventListener("dragend", (e) => {
                     draggedPiece = null;
                     sourceSquare = null;
+                    const sqaureCode = String.fromCharCode(97 + squareindex) + String(8 - rowindex);
+                    removeSuggestion(chess.moves({ square: sqaureCode, verbose: true }));
                 });
 
                 squareElement.appendChild(pieceElement);
@@ -115,6 +119,25 @@ const handleMove = (source, target) => {
 
     socket.emit("move", code, move);
 };
+
+
+const giveSuggestions = (moves) => {
+    moves.forEach((e) => {
+        let colindex = e.to[0].charCodeAt(0) - 97;
+        let rowindex = 8 - parseInt(e.to[1]);
+        let arrs = document.querySelector(`.square[data-row = "${rowindex}"][data-col="${colindex}"]`)
+        arrs.classList.add("suggest");
+    })
+}
+
+const removeSuggestion = (moves) => {
+    moves.forEach((e) => {
+        let colindex = e.to[0].charCodeAt(0) - 97;
+        let rowindex = 8 - parseInt(e.to[1]);
+        let arrs = document.querySelector(`.square[data-row = "${rowindex}"][data-col="${colindex}"]`)
+        arrs.classList.remove("suggest");
+    })
+}
 
 // Unicode representation of pieces
 const getPieceUnicode = (piece) => {

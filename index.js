@@ -54,7 +54,6 @@ io.on("connection", function (uniquesocket) {
         io.emit("reconnect", code);
         io.emit("boardState", code, chess[code].fen());
         join_code = code;
-        console.log(chess)
     })
 
     uniquesocket.on("disconnect", function () {
@@ -67,7 +66,6 @@ io.on("connection", function (uniquesocket) {
             console.log("Black player disconnected");
         }
         io.emit("opponent_disconnect", join_code, uniquesocket.id == players[join_code]?.white ? "w" : "b");
-        console.log(players)
     });
 
     uniquesocket.on("move", (thisCode, move) => {

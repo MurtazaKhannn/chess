@@ -8,7 +8,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socket(server);
 let join_code;
-const chess = new Chess();
+const chess = {};
 let players = {};
 let currentPlayer = "w"; // White starts the game
 
@@ -30,14 +30,13 @@ io.on("connection", function (uniquesocket) {
     console.log("A user connected with ID:", uniquesocket.id);
 
     uniquesocket.on("joinCode", (code) => {
+
         if (!players[code]) {
             players[code] = {};
         }
 
-        if (players[join_code]?.fen != undefined) {
-            chess.load(players[join_code].fen);
-        } else {
-            chess.reset();
+        if (!chess[code]) {
+            chess[code] = new Chess();
         }
 
         if (!players[code]?.white) {
@@ -53,9 +52,9 @@ io.on("connection", function (uniquesocket) {
             console.log("A spectator joined with ID:", uniquesocket.id);
         }
         io.emit("reconnect", code);
-        io.emit("boardState", code, chess.fen());
+        io.emit("boardState", code, chess[code].fen());
         join_code = code;
-        console.log(players)
+        console.log(chess)
     })
 
     uniquesocket.on("disconnect", function () {
@@ -73,9 +72,10 @@ io.on("connection", function (uniquesocket) {
 
     uniquesocket.on("move", (thisCode, move) => {
         try {
+
             // Log the current player and the move attempt
             console.log("Move attempt by:", uniquesocket.id);
-            console.log("Current turn is:", chess.turn());
+            console.log("Current turn is:", chess[thisCode].turn());
             console.log(
                 "White player:",
                 players[thisCode]?.white,
@@ -84,40 +84,35 @@ io.on("connection", function (uniquesocket) {
             );
 
             // Turn checking logic
-            if (chess.turn() === "w" && uniquesocket.id !== players[thisCode]?.white) {
+            if (chess[thisCode].turn() === "w" && uniquesocket.id !== players[thisCode]?.white) {
                 console.log(
                     "It's white's turn but black or a spectator tried to move",
                 );
                 return;
             }
-            if (chess.turn() === "b" && uniquesocket.id !== players[thisCode]?.black) {
+            if (chess[thisCode].turn() === "b" && uniquesocket.id !== players[thisCode]?.black) {
                 console.log(
                     "It's black's turn but white or a spectator tried to move",
                 );
                 return;
             }
 
-            if (players[join_code]?.fen != undefined) {
-                chess.load(players[join_code].fen);
-            }
-
-            const result = chess.move(move);
+            const result = chess[thisCode].move(move);
             if (result) {
-                currentPlayer = chess.turn(); // Update to the next player's turn
+                currentPlayer = chess[thisCode].turn(); // Update to the next player's turn
 
                 // Check for checkmate after the move
-                if (chess.isCheckmate()) {
+                if (chess[thisCode].isCheckmate()) {
                     // Notify clients that checkmate occurred
-                    io.emit("checkmate", thisCode, chess.turn()); // jeetne wale ka color bhej
-                    chess.reset(); // Reset the game state
+                    io.emit("checkmate", thisCode, chess[thisCode].turn()); // jeetne wale ka color bhej
+                    chess[thisCode].reset(); // Reset the game state
                     currentPlayer = "w"; // white ko current player bana
                 } else {
                     io.emit("move", thisCode, move); // Broadcast the move to all connected clients
-                    io.emit("boardState", thisCode, chess.fen()); // Send the current board state (FEN)
+                    io.emit("boardState", thisCode, chess[thisCode].fen()); // Send the current board state (FEN)
                     console.log("Move successful:", move);
-                    players[join_code].fen = chess.fen();
 
-                    if (chess.turn() == "w") {
+                    if (chess[thisCode].turn() == "w") {
                         io.emit("turn", thisCode, "w");
                     } else {
                         io.emit("turn", thisCode, "b");

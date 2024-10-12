@@ -1,5 +1,7 @@
 const url = new URL(window.location.href);
 const params = new URLSearchParams(url.search);
+import { addMoveToHistory, resetMoveHistory } from './movehistory.js';
+
 
 if (!params.has('code')) {
     window.location.href = "/";
@@ -18,6 +20,8 @@ let draggedPiece = null;
 let sourceSquare = null;
 let playerRole = null;
 let opponentDisconnected = false;
+let moveCount = 1; 
+
 
 const restartButton = document.getElementById("restartButton");
 
@@ -159,6 +163,7 @@ const getPieceUnicode = (piece) => {
     return unicodePieces[piece.type] || "";
 };
 
+
 // Socket event listeners
 socket.on("playerRole", function (thisCode, role) {
     if (thisCode == code) {
@@ -188,7 +193,18 @@ socket.on("boardState", function (thisCode, fen) {
 socket.on("move", function (thisCode, move) {
     if (thisCode == code) {
         chess.move(move);
+
         renderBoard();
+        
+        const moveNotation = chess.history({ verbose: true }).pop(); // Get the last move made
+
+        if (moveNotation) {
+            const playerName = moveCount % 2 === 0 ? "white" : "black"; // White's turn if even
+            addMoveToHistory(`${playerName}: ${moveNotation.san}` , moveCount); // Add to history
+            moveCount++; // Increment the move count after each move
+
+        }
+
     }
 });
 
@@ -240,6 +256,8 @@ restartButton.addEventListener("click", () => {
     chess.reset(); // Resets the chess game to the initial state
     socket.emit("restartGame"); // Notify the server to restart the game
     socket.emit("initializeGame"); // Optionally, let the server know to set the game state
+
+    resetMoveHistory()
     renderBoard(); // Re-render the board
     resetTimer()
 });

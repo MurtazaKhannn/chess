@@ -1,98 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .chessboard {
+        display: grid;
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        grid-template-rows: repeat(8, minmax(0, 1fr));
+        width: 400px;
+        height: 400px;
+        transform: rotate(0deg);
+      }
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>
-    <%= title %>
-  </title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .chessboard {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-      grid-template-rows: repeat(8, minmax(0, 1fr));
-      width: 400px;
-      height: 400px;
-      transform: rotate(0deg);
-    }
+      .piece.white {
+        color: white;
+        filter: drop-shadow(0 0 2px rgba(0, 0, 0, 1));
+      }
 
-    .piece.white {
-      color: white;
-      filter: drop-shadow(0 0 2px rgba(0, 0, 0, 1));
-    }
+      .piece.black {
+        color: black;
+      }
 
-    .piece.black {
-      color: black;
-    }
+      .flipped {
+        transform: rotate(180deg);
+      }
 
-    .flipped {
-      transform: rotate(180deg);
-    }
+      .square {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-    .square {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+      .square.light {
+        background-color: #f0d9b5;
+      }
 
-    .square.light {
-      background-color: #f0d9b5;
-    }
+      .square.dark {
+        background-color: #b58863;
+      }
 
-    .square.dark {
-      background-color: #b58863;
-    }
+      .piece {
+        font-size: 36px;
+        cursor: pointer;
+      }
 
-    .piece {
-      font-size: 36px;
-      cursor: pointer;
-    }
+      .piece.draggable {
+        cursor: grab;
+      }
 
-    .piece.draggable {
-      cursor: grab;
-    }
+      .dragging {
+        opacity: 0.5;
+      }
 
-    .dragging {
-      opacity: 0.5;
-    }
+      /* Rotate pieces for black player */
+      .flipped .piece {
+        transform: rotate(180deg);
+      }
 
-    /* Rotate pieces for black player */
-    .flipped .piece {
-      transform: rotate(180deg);
-    }
+      .suggest {
+        border: 2px solid black;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+      }
 
-    .suggest {
-      border: 2px solid black;
-      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
-    }
-  </style>
-</head>
+      .move-history {
+        width: 400px; /* Fixed width */
+        height: 50px; /* Fixed height */
+        overflow-x: auto; /* Enable horizontal scrolling */
+        white-space: nowrap; /* Prevent line breaks to ensure moves stay in one line */
+        background-color: rgba(
+          31,
+          41,
+          55,
+          0.7
+        ); /* Semi-transparent dark background */
+        border: 1px solid #4b5563; /* Border color */
+        border-radius: 0.375rem; /* Rounded corners */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Shadow for depth */
 
-<body>
-  <div class="w-full h-screen flex items-center justify-center bg-zinc-900 flex-col">
-    <div class="w-full flex justify-between p-5">
-      <div class="text-white text-2xl p-2 border rounded-md border-white w-fit" id="timer">00:00:00</div>
-      <div class="text-white text-xl p-2 flex gap-3">Code :- <p class="text-gray text-2xl font-semibold">
-          <%= joinCode %>
-        </p>
+        /* Custom scrollbar styles */
+      }
+
+      .move-history::-webkit-scrollbar {
+        width: 12px; /* Width of the vertical scrollbar */
+        height: 12px; /* Height of the horizontal scrollbar */
+      }
+
+      .move-history::-webkit-scrollbar-track {
+        background: #2d3748; /* Background of the scrollbar track */
+      }
+
+      .move-history::-webkit-scrollbar-thumb {
+        background-color: #4a5568; /* Color of the scrollbar thumb */
+        border-radius: 6px; /* Rounded corners for the thumb */
+        border: 3px solid #2d3748; /* Space between thumb and track */
+      }
+
+      .move-history::-webkit-scrollbar-thumb:hover {
+        background-color: #718096; /* Color of the thumb on hover */
+      }
+    </style>
+  </head>
+
+  <body>
+    <div
+      class="w-full h-screen flex items-center justify-center bg-zinc-900 flex-col"
+    >
+      <div class="w-full flex justify-between p-5">
+        <div
+          class="text-white text-2xl p-2 border rounded-md border-white w-fit"
+          id="timer"
+        >
+          00:00:00
+        </div>
+        <div class="text-white text-xl p-2 flex gap-3">
+          Code :-
+          <p class="text-gray text-2xl font-semibold"><%= joinCode %></p>
+        </div>
+
+        <div
+          class="move-history text-white w-96 h-12 overflow-x-auto whitespace-nowrap text-sm p-2 bg-gray-800 bg-opacity-70 border border-gray-600 rounded-md shadow-lg flex gap-3"
+          id="moveHistory"
+        >
+          <!-- Move entries will be appended here dynamically -->
+        </div>
       </div>
+      <h1 class="text-white text-4xl mb-4">Chess</h1>
+      <div class="chessboard w-96 h-96"></div>
+      <div class="message text-white mt-4"></div>
+      <p class="currentTurn text-white mt-4"></p>
+      <button
+        id="restartButton"
+        class="hidden mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        Restart Game
+      </button>
     </div>
-    <h1 class="text-white text-4xl mb-4">Chess</h1>
-    <div class="chessboard w-96 h-96"></div>
-    <div class="message text-white mt-4"></div>
-    <p class="currentTurn text-white mt-4"></p>
-    <button id="restartButton" class="hidden mt-4 bg-blue-500 text-white px-4 py-2 rounded">Restart Game</button>
-  </div>
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
-    integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
-    crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"
-    integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="/js/timer.js"></script>
-  <script src="/js/chessgame.js"></script>
-</body>
-
+    <script
+      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+      integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"
+      integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="/js/timer.js"></script>
+    <script type="module" src="/js/chessgame.js"></script>
+    <script type="module" src="/js/movehistory.js"></script>
+  </body>
 </html>

@@ -199,7 +199,7 @@ socket.on("move", function (thisCode, move) {
         const moveNotation = chess.history({ verbose: true }).pop(); // Get the last move made
 
         if (moveNotation) {
-            const playerName = moveCount % 2 === 0 ? "white" : "black"; // White's turn if even
+            const playerName = moveCount % 2 === 0 ? "black" : "white"; // White's turn if even
             addMoveToHistory(`${playerName}: ${moveNotation.san}` , moveCount); // Add to history
             moveCount++; // Increment the move count after each move
 

@@ -39,6 +39,7 @@ io.on("connection", function (uniquesocket) {
             chess[code] = new Chess();
         }
 
+        
         if (!players[code]?.white) {
             players[code].white = uniquesocket.id;
             uniquesocket.emit("playerRole", code, "w");
